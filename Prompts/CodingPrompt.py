@@ -35,8 +35,6 @@ You will receive a DesignState containing:
 - performance
 - scalability
 - folder_structure
-- testing_strategy
-- development_phases
 - coding_guidelines
 - implementation_notes
 - coding_handoff
@@ -57,7 +55,6 @@ You MUST implement:
 - every API endpoint
 - every database entity
 - required configuration files
-- required test files when defined in testing_strategy
 
 Follow the provided folder_structure exactly.
 

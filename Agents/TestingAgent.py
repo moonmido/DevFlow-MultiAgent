@@ -2,23 +2,22 @@ from langchain.agents import create_agent
 from langchain_nvidia_ai_endpoints import ChatNVIDIA
 import os 
 from Tools.FileManagementTools import create_file, read_file, overwrite_file, append_to_file, delete_file, list_files
-from Prompts.CodingPrompt import System_Prompt
-from States.CodingAgentOutput import CodingState
+from Prompts.TestingPrompt import System_Prompt
+from States.TestingAgentOutput import TestingState
 
-os.environ["NVIDIA_API_KEY"] = "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"
+os.environ["NVIDIA_API_KEY"] = "YOUR_NVIDIA_API_KEY"
 
-llm = ChatNVIDIA(model="qwen/qwen3-next-80b-a3b-instruct",
+llm = ChatNVIDIA(model="openai/gpt-oss-20b",
     temperature=0,
     max_completion_tokens=4096,
     timeout=600
 )
 
 
-
-
-def create_coding_agent():
+    
+def create_testing_agent():
     agent = create_agent(
-        name="Coding Agent",
+        name="Testing Agent",
         tools=[
             create_file,
             read_file,
@@ -29,7 +28,7 @@ def create_coding_agent():
         ],
         model=llm,
         system_prompt=System_Prompt,
-        response_format=CodingState
+        response_format=TestingState
     )
     return agent
 

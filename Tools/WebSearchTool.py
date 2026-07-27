@@ -1,7 +1,7 @@
 import os 
 from langchain_tavily import TavilySearch
 from langchain.tools import tool
-os.environ["TAVILY_API_KEY"] = "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" 
+os.environ["TAVILY_API_KEY"] = "" 
 
 
 tavily = TavilySearch(max_results=5)

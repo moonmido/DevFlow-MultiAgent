@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 class GeneratedFile(BaseModel):
     path: str
     language: str
-    content: str
+    content: Optional[str] = None
     description: Optional[str] = None
 
 

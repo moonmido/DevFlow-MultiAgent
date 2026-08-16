@@ -118,6 +118,35 @@ def _files_from_tool_calls(result: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     return None
 
 
+def _test_files_from_tool_calls(result: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    created = []
+    for message in result.get("messages", []):
+        for call in getattr(message, "tool_calls", None) or []:
+            if call.get("name") == "create_file":
+                path = (call.get("args") or {}).get("path")
+                if path:
+                    created.append(path)
+    if created:
+        return {
+            "status": "partial_success",
+            "testing_summary": f"Created {len(created)} test file(s) via filesystem tools; model produced no structured summary.",
+            "generated_test_files": [
+                {"path": p, "language": str(p).rsplit(".", 1)[-1], "description": "Created by Testing Agent"}
+                for p in created
+            ],
+            "created_files": created,
+            "modified_files": [],
+            "deleted_files": [],
+            "testing_framework": "pytest",
+            "estimated_test_count": len(created),
+            "tested_components": [],
+            "assumptions": [],
+            "implementation_notes": [],
+            "blocking_issues": [],
+        }
+    return None
+
+
 def _run_agent(kind: str, content: str, state: Dict[str, Any]) -> Dict[str, Any]:
     if config.MOCK_MODE:
         mock = {
@@ -130,7 +159,7 @@ def _run_agent(kind: str, content: str, state: Dict[str, Any]) -> Dict[str, Any]
         return mock(state)
 
     agent = _get_agent(kind)
-    for attempt in range(2):
+    for attempt in range(3):
         result = agent.invoke({"messages": [HumanMessage(content=content)]})
 
         structured = result.get("structured_response")
@@ -147,8 +176,12 @@ def _run_agent(kind: str, content: str, state: Dict[str, Any]) -> Dict[str, Any]
         if found is not None:
             return found
 
-        if kind in ("coding", "testing"):
+        if kind == "coding":
             fallback_result = _files_from_tool_calls(result)
+            if fallback_result is not None:
+                return fallback_result
+        if kind == "testing":
+            fallback_result = _test_files_from_tool_calls(result)
             if fallback_result is not None:
                 return fallback_result
 

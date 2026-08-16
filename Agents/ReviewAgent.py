@@ -15,7 +15,7 @@ llm = ChatNVIDIA(
     model="openai/gpt-oss-20b",
     temperature=0,
     max_completion_tokens=4096,
-    timeout=600,
+    timeout=config.MODEL_TIMEOUT_SECONDS,
 )
 
 _agent = None

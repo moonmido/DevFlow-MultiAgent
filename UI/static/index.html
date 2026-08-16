@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevFlow — Multi-Agent Software Engineering</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --card: #ffffff;
+    --border: #e4e7ec;
+    --text: #1c2430;
+    --muted: #6b7480;
+    --accent: #4f46e5;
+    --accent-soft: #eef0ff;
+    --green: #16a34a;
+    --green-soft: #e7f6ec;
+    --red: #dc2626;
+    --red-soft: #fdecec;
+    --amber: #d97706;
+    --amber-soft: #fdf3e3;
+    --radius: 12px;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 32px 20px 64px; }
+
+  /* Header */
+  header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 24px; }
+  header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+  header h1 span { color: var(--accent); }
+  header .tag {
+    font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px;
+    background: var(--accent-soft); color: var(--accent);
+  }
+  header .tag.mock { background: var(--amber-soft); color: var(--amber); }
+  header .sub { font-size: 13px; color: var(--muted); }
+
+  /* Card */
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; box-shadow: 0 1px 2px rgba(16,24,40,.04);
+  }
+  .card + .card { margin-top: 16px; }
+  .card h2 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 12px; }
+
+  /* Input */
+  textarea {
+    width: 100%; min-height: 96px; resize: vertical; padding: 12px 14px;
+    border: 1px solid var(--border); border-radius: 10px; font-size: 15px;
+    font-family: inherit; color: var(--text); background: #fafbfc;
+  }
+  textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
+  .row { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent); color: #fff; border: none; border-radius: 10px;
+    padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: opacity .15s, transform .05s;
+  }
+  .btn:hover { opacity: .92; }
+  .btn:active { transform: scale(.98); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .hint { font-size: 12px; color: var(--muted); }
+
+  /* Status pill */
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+    padding: 4px 10px; border-radius: 999px;
+  }
+  .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .pill.running { background: var(--amber-soft); color: var(--amber); }
+  .pill.done { background: var(--green-soft); color: var(--green); }
+  .pill.error { background: var(--red-soft); color: var(--red); }
+  .pill.timeout { background: var(--red-soft); color: var(--red); }
+  .pill.idle { background: var(--border); color: var(--muted); }
+
+  /* Progress steps */
+  .steps { display: flex; flex-wrap: wrap; gap: 8px; }
+  .step {
+    display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 500;
+    padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border);
+    color: var(--muted); background: #fafbfc;
+  }
+  .step .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
+  .step.active { border-color: var(--amber); color: var(--amber); background: var(--amber-soft); }
+  .step.active .dot { background: var(--amber); animation: pulse 1s infinite; }
+  .step.done { border-color: var(--green); color: var(--green); background: var(--green-soft); }
+  .step.done .dot { background: var(--green); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+
+  /* Results */
+  .meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .meta .cell { background: #fafbfc; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+  .meta .cell .k { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  .meta .cell .v { font-size: 15px; font-weight: 600; margin-top: 2px; word-break: break-word; }
+
+  details {
+    border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-top: 8px;
+  }
+  details summary {
+    cursor: pointer; list-style: none; padding: 11px 14px; font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; gap: 8px; background: #fafbfc;
+  }
+  details summary::-webkit-details-marker { display: none; }
+  details summary .chev { color: var(--muted); transition: transform .15s; font-size: 10px; }
+  details[open] summary .chev { transform: rotate(90deg); }
+  details pre {
+    margin: 0; padding: 14px; font-family: var(--mono); font-size: 12px;
+    max-height: 340px; overflow: auto; border-top: 1px solid var(--border);
+    white-space: pre-wrap; word-break: break-word;
+  }
+
+  /* Logs */
+  .logs {
+    font-family: var(--mono); font-size: 12px; background: #0f172a; color: #cbd5e1;
+    border-radius: 10px; padding: 14px; max-height: 200px; overflow: auto;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .logs:empty::before { content: "No activity yet."; color: #64748b; }
+
+  .error-box {
+    background: var(--red-soft); color: var(--red); border: 1px solid #f5c6c6;
+    border-radius: 10px; padding: 12px 14px; font-size: 13px;
+  }
+  .hidden { display: none; }
+  .muted { color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Dev<span>Flow</span></h1>
+    <span class="tag" id="mode-tag">LIVE</span>
+    <div class="sub">Multi-agent software engineering pipeline</div>
+  </header>
+
+  <div class="card">
+    <h2>New project request</h2>
+    <textarea id="query" placeholder="Describe the software you want built, e.g. &quot;Build a FastAPI REST API for a to-do list with SQLite persistence, CRUD endpoints, and input validation.&quot;"></textarea>
+    <div class="row">
+      <button class="btn" id="run-btn">▶&nbsp; Run pipeline</button>
+      <span class="pill idle" id="status-pill"><span class="dot"></span><span id="status-text">Idle</span></span>
+    </div>
+    <div class="hint" id="hint">Analysis → Design → Coding → Testing → Review. Press ⌘/Ctrl+Enter to run.</div>
+  </div>
+
+  <div class="card hidden" id="progress-card">
+    <h2>Pipeline progress</h2>
+    <div class="steps" id="steps"></div>
+    <div style="margin-top:12px"><span class="muted" id="phase-note"></span></div>
+  </div>
+
+  <div class="card hidden" id="results-card">
+    <h2>Results</h2>
+    <div class="meta" id="meta"></div>
+    <div id="error-box" class="error-box hidden"></div>
+    <div id="details"></div>
+  </div>
+
+  <div class="card">
+    <h2>Activity log</h2>
+    <div class="logs" id="logs"></div>
+  </div>
+</div>
+
+<script>
+const STEP_NAMES = {
+  router_node: "Router",
+  analysis_node: "Analysis",
+  design_node: "Design",
+  coding_node: "Coding",
+  testing_node: "Testing",
+  review_node: "Review",
+  finalize_node: "Finalize",
+};
+const PHASE_ORDER = Object.keys(STEP_NAMES);
+
+const queryEl = document.getElementById("query");
+const runBtn = document.getElementById("run-btn");
+const statusPill = document.getElementById("status-pill");
+const statusText = document.getElementById("status-text");
+const stepsEl = document.getElementById("steps");
+const phaseNote = document.getElementById("phase-note");
+const logsEl = document.getElementById("logs");
+const progressCard = document.getElementById("progress-card");
+const resultsCard = document.getElementById("results-card");
+const metaEl = document.getElementById("meta");
+const detailsEl = document.getElementById("details");
+const errorBox = document.getElementById("error-box");
+
+let pollTimer = null;
+
+function setPill(status) {
+  statusPill.className = "pill " + status;
+  statusText.textContent =
+    status === "running" ? "Running…" :
+    status === "done" ? "Complete" :
+    status === "error" ? "Error" :
+    status === "timeout" ? "Timeout" : "Idle";
+}
+
+function renderSteps(completed, current, running) {
+  stepsEl.innerHTML = "";
+  let firstPending = true;
+  for (const name of PHASE_ORDER) {
+    const el = document.createElement("span");
+    el.className = "step";
+    if (completed.includes(name)) {
+      el.classList.add("done");
+    } else if (running && firstPending) {
+      el.classList.add("active");
+      firstPending = false;
+    } else if (name === current) {
+      el.classList.add("active");
+    }
+    el.innerHTML = `<span class="dot"></span>${STEP_NAMES[name]}`;
+    stepsEl.appendChild(el);
+  }
+}
+
+function fmtElapsed(startedAt, finishedAt) {
+  const end = finishedAt || Date.now() / 1000;
+  const s = Math.max(0, Math.round(end - startedAt));
+  const m = Math.floor(s / 60), sec = s % 60;
+  return `${m}m ${sec.toString().padStart(2, "0")}s`;
+}
+
+function appendLogs(logs) {
+  if (logs && logs.length) logsEl.textContent = logs.join("\n");
+  logsEl.scrollTop = logsEl.scrollHeight;
+}
+
+function fmt(v) {
+  try { return JSON.stringify(v, null, 2); }
+  catch { return String(v); }
+}
+
+function renderResults(run) {
+  const res = run.result || {};
+  const meta = [];
+  meta.push({ k: "Status", v: (run.approval_status || res.status || "—") });
+  meta.push({ k: "Review passes", v: String(run.iterations ?? res.iterations ?? 0) });
+  meta.push({ k: "Phase", v: res.current_phase || "—" });
+  const reason = run.revision_reason || res.revision_reason;
+  meta.push({ k: "Revision", v: reason || "—" });
+  metaEl.innerHTML = meta.map(m =>
+    `<div class="cell"><div class="k">${m.k}</div><div class="v">${m.v}</div></div>`
+  ).join("");
+
+  if (run.error || res.error) {
+    errorBox.textContent = run.error || res.error;
+    errorBox.classList.remove("hidden");
+  }
+
+  const sections = [
+    ["Analysis", res.analysis],
+    ["Design", res.design],
+    ["Coding", res.coding],
+    ["Testing", res.testing],
+    ["Review", res.review],
+  ];
+  detailsEl.innerHTML = sections.map(([name, data]) => `
+    <details>
+      <summary><span class="chev">▶</span>${name}</summary>
+      <pre>${data ? escapeHtml(fmt(data)) : "—"}</pre>
+    </details>
+  `).join("");
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+async function poll(runId) {
+  try {
+    const resp = await fetch(`/api/status?run_id=${runId}`);
+    if (!resp.ok) throw new Error("status request failed");
+    const run = await resp.json();
+
+    renderSteps(run.completed_phases || [], run.current_phase, run.status === "running");
+    const elapsed = fmtElapsed(run.started_at, run.finished_at);
+    const activeName = (run.completed_phases || []).length < PHASE_ORDER.length
+      ? STEP_NAMES[PHASE_ORDER.find(n => !(run.completed_phases || []).includes(n))] || "…"
+      : "";
+    phaseNote.textContent = run.status === "running"
+      ? `Elapsed ${elapsed} — running ${activeName}… (each phase can take several minutes)`
+      : `Finished in ${elapsed}`;
+    appendLogs(run.logs);
+    progressCard.classList.remove("hidden");
+
+    if (run.status === "done") {
+      setPill("done");
+      resultsCard.classList.remove("hidden");
+      renderResults(run);
+      clearInterval(pollTimer);
+      runBtn.disabled = false;
+      return;
+    }
+    if (run.status === "error" || run.status === "timeout") {
+      setPill(run.status);
+      resultsCard.classList.remove("hidden");
+      renderResults(run);
+      clearInterval(pollTimer);
+      runBtn.disabled = false;
+      return;
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function startRun() {
+  const query = queryEl.value.trim();
+  if (!query) { queryEl.focus(); return; }
+  runBtn.disabled = true;
+  setPill("running");
+  progressCard.classList.remove("hidden");
+  resultsCard.classList.add("hidden");
+  errorBox.classList.add("hidden");
+  logsEl.textContent = "";
+  renderSteps([], null);
+  phaseNote.textContent = "Starting pipeline…";
+
+  try {
+    const resp = await fetch("/api/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || "failed to start");
+    clearInterval(pollTimer);
+    pollTimer = setInterval(() => poll(data.run_id), 2000);
+    poll(data.run_id);
+  } catch (e) {
+    setPill("error");
+    phaseNote.textContent = String(e);
+    runBtn.disabled = false;
+  }
+}
+
+runBtn.addEventListener("click", startRun);
+queryEl.addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") startRun();
+});
+</script>
+</body>
+</html>

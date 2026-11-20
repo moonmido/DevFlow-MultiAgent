@@ -5,7 +5,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python)](https://python.org)
 [![LangGraph](https://img.shields.io/badge/LangGraph-Powered-orange?style=for-the-badge)](https://github.com/langchain-ai/langgraph)
-[![NVIDIA NIM](https://img.shields.io/badge/NVIDIA-NIM-76b900?style=for-the-badge&logo=nvidia)](https://build.nvidia.com)
+[![Groq](https://img.shields.io/badge/Groq-qwen%2Fqwen3--32b-f55036?style=for-the-badge)](https://groq.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
 > **DevFlow** is a state-driven multi-agent framework that takes a natural language requirement and autonomously produces analyzed specs, architecture design, production-grade code, unit/integration tests, and a code review — in one single run.
@@ -101,15 +101,17 @@ pip install -r requirements.txt
 ### 2. Set API Keys
 
 ```bash
-export NVIDIA_API_KEY=nvapi-...     # Required for live LLM inference
+export GROQ_API_KEY=gsk_...         # Required for live LLM inference
 export TAVILY_API_KEY=tvly-...      # Required for web search tool
+export NVIDIA_API_KEY=nvapi-...     # Optional — used only for RAG embeddings
 ```
 
 Or create a `.env` file at the project root:
 
 ```env
-NVIDIA_API_KEY=nvapi-...
+GROQ_API_KEY=gsk_...
 TAVILY_API_KEY=tvly-...
+NVIDIA_API_KEY=nvapi-...   # Optional — used only for RAG embeddings
 ```
 
 ### 3. Run
@@ -130,7 +132,8 @@ All settings live in `config.py` and can be overridden via environment variables
 
 | Variable | Default | Description |
 |---|---|---|
-| `NVIDIA_API_KEY` | — | NVIDIA NIM API key |
+| `GROQ_API_KEY` | — | Groq API key (LLM inference) |
+| `NVIDIA_API_KEY` | — | NVIDIA NIM API key (RAG embeddings only) |
 | `TAVILY_API_KEY` | — | Tavily search API key |
 | `MOCK_MODE` | `0` | Set to `1` to run offline without API calls |
 | `DEVFLOW_MAX_REVIEW_ITERATIONS` | `2` | Max times the review loop can cycle |
@@ -144,7 +147,7 @@ All settings live in `config.py` and can be overridden via environment variables
 ## 🧩 Tech Stack
 
 - **[LangGraph](https://github.com/langchain-ai/langgraph)** — stateful, cyclical multi-agent orchestration
-- **[NVIDIA NIM](https://build.nvidia.com)** — fast LLM inference for agent reasoning
+- **[Groq](https://groq.com)** — fast LLM inference for agent reasoning (`qwen/qwen3-32b`)
 - **[Tavily](https://tavily.com)** — real-time web search for the research tool
 - **Python 3.10+** — async-friendly, type-annotated codebase
 

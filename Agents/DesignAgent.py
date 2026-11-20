@@ -1,19 +1,19 @@
 import os
 
 from langchain.agents import create_agent
-from langchain_nvidia_ai_endpoints import ChatNVIDIA
+from langchain_groq import ChatGroq
 
 import config
 from Prompts.DesignPrompt import Sys_Prompt
 from States.DesignAgentOutput import DesignState
 from Tools.KnowledgeBases.Design_Rag import get_relevant_documents
 
-os.environ.setdefault("NVIDIA_API_KEY", config.NVIDIA_API_KEY)
+os.environ.setdefault("GROQ_API_KEY", config.GROQ_API_KEY)
 
-llm = ChatNVIDIA(
-    model="openai/gpt-oss-20b",
+llm = ChatGroq(
+    model="qwen/qwen3-32b",
     temperature=0,
-    max_completion_tokens=4096,
+    max_tokens=4096,
     timeout=config.MODEL_TIMEOUT_SECONDS,
 )
 

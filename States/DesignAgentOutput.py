@@ -21,6 +21,12 @@ class APIDesign(BaseModel):
     endpoints: List[Dict] = Field(default_factory=list)
 
 
+class Algorithm(BaseModel):
+    name: str
+    description: str
+    complexity: str = ""
+
+
 class DatabaseDesign(BaseModel):
     required: bool
     entities: List[Dict] = Field(default_factory=list)
@@ -42,7 +48,7 @@ class DesignState(BaseModel):
 
     class_design: List[Dict] = Field(default_factory=list)
     design_patterns: List[str] = Field(default_factory=list)
-    algorithms: List[str] = Field(default_factory=list)
+    algorithms: List[Algorithm] = Field(default_factory=list)
 
     security: List[str] = Field(default_factory=list)
     performance: List[str] = Field(default_factory=list)

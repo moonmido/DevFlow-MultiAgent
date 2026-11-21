@@ -23,3 +23,14 @@ UI_PORT = int(os.getenv("DEVFLOW_UI_PORT", "8000"))
 WORKFLOW_TIMEOUT_SECONDS = int(os.getenv("DEVFLOW_WORKFLOW_TIMEOUT_SECONDS", "900"))
 
 MODEL_TIMEOUT_SECONDS = int(os.getenv("DEVFLOW_MODEL_TIMEOUT_SECONDS", "300"))
+
+# Groq's on-demand tier counts the requested `max_tokens` towards the
+# per-minute token limit, so large output budgets make requests fail with
+# 413/429 even when the prompt itself is small. Keep these budgets modest.
+MODEL_MAX_TOKENS = {
+    "analysis": int(os.getenv("DEVFLOW_ANALYSIS_MAX_TOKENS", "2048")),
+    "design": int(os.getenv("DEVFLOW_DESIGN_MAX_TOKENS", "3584")),
+    "coding": int(os.getenv("DEVFLOW_CODING_MAX_TOKENS", "2560")),
+    "testing": int(os.getenv("DEVFLOW_TESTING_MAX_TOKENS", "2048")),
+    "review": int(os.getenv("DEVFLOW_REVIEW_MAX_TOKENS", "2560")),
+}

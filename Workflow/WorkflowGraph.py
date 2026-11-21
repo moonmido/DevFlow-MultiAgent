@@ -159,8 +159,21 @@ def _run_agent(kind: str, content: str, state: Dict[str, Any]) -> Dict[str, Any]
         return mock(state)
 
     agent = _get_agent(kind)
+    result = None
+    last_error: Optional[Exception] = None
     for attempt in range(3):
-        result = agent.invoke({"messages": [HumanMessage(content=content)]})
+        try:
+            result = agent.invoke({"messages": [HumanMessage(content=content)]})
+        except Exception as exc:  # noqa: BLE001
+            last_error = exc
+            print(
+                f"[DevFlow] agent '{kind}' raised (attempt {attempt + 1}/3): "
+                f"{type(exc).__name__}: {exc}",
+                flush=True,
+            )
+            if "daily token limit" in str(exc).lower():
+                break
+            continue
 
         structured = result.get("structured_response")
         if structured is not None:
@@ -187,6 +200,11 @@ def _run_agent(kind: str, content: str, state: Dict[str, Any]) -> Dict[str, Any]
 
         if attempt == 0:
             print(f"[DevFlow] agent '{kind}' produced no structured output; retrying...", flush=True)
+
+    if result is None:
+        raise ValueError(
+            f"Agent '{kind}' failed after 3 attempts: {type(last_error).__name__}: {last_error}"
+        )
 
     print(f"[debug] Agent '{kind}' fallback failed. Result keys: {list(result.keys())}", flush=True)
     msgs = result.get("messages", [])
@@ -255,7 +273,7 @@ def coding_node(state: Dict[str, Any]) -> Dict[str, Any]:
         {
             "user_query": state.get("user_query"),
             "analysis": _compact_analysis(state.get("analysis")),
-            "design": state.get("design"),
+            "design": _compact_design_for_coding(state.get("design")),
         },
         indent=2,
     )
@@ -319,6 +337,29 @@ def _compact_design(d: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
         "design_patterns": d.get("design_patterns"),
         "folder_structure": d.get("folder_structure"),
         "testing_strategy": d.get("testing_strategy"),
+        "coding_handoff": d.get("coding_handoff"),
+        "confidence_score": d.get("confidence_score"),
+    }
+
+
+def _compact_design_for_coding(d: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """Keep only the design fields the Coding Agent needs.
+
+    The full design also contains security/performance/testing sections that
+    are irrelevant for implementation. Dropping them keeps the Groq request
+    under the per-minute token limit.
+    """
+    if not d:
+        return None
+    return {
+        "architecture_style": d.get("architecture_style"),
+        "modules": d.get("modules"),
+        "api_design": d.get("api_design"),
+        "database_design": d.get("database_design"),
+        "class_design": d.get("class_design"),
+        "folder_structure": d.get("folder_structure"),
+        "coding_guidelines": d.get("coding_guidelines"),
+        "implementation_notes": d.get("implementation_notes"),
         "coding_handoff": d.get("coding_handoff"),
         "confidence_score": d.get("confidence_score"),
     }

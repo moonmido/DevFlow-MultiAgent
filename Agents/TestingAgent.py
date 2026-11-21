@@ -1,7 +1,12 @@
 import os
 
+from Agents.structured_output import (
+    GroqChatModel,
+    GroqRateLimitRetry,
+    GroqToolChoiceFallback,
+    GroqToolStrategy,
+)
 from langchain.agents import create_agent
-from langchain_groq import ChatGroq
 
 import config
 from Prompts.TestingPrompt import System_Prompt
@@ -17,10 +22,10 @@ from Tools.FileManagementTools import (
 
 os.environ.setdefault("GROQ_API_KEY", config.GROQ_API_KEY)
 
-llm = ChatGroq(
-    model="qwen/qwen3-32b",
+llm = GroqChatModel(
+    model="openai/gpt-oss-120b",
     temperature=0,
-    max_tokens=4096,
+    max_tokens=config.MODEL_MAX_TOKENS["testing"],
     timeout=config.MODEL_TIMEOUT_SECONDS,
 )
 
@@ -42,6 +47,7 @@ def create_testing_agent():
             ],
             model=llm,
             system_prompt=System_Prompt,
-            response_format=TestingState,
+            middleware=[GroqRateLimitRetry(), GroqToolChoiceFallback()],
+            response_format=GroqToolStrategy(schema=TestingState),
         )
     return _agent

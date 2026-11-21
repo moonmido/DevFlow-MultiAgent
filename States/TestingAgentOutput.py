@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Optional
 from pydantic import BaseModel
 
 
@@ -9,7 +9,7 @@ class GeneratedTestFile(BaseModel):
 
 
 class TestingState(BaseModel):
-    task_id: str
+    task_id: Optional[str] = None
 
     status: Literal[
         "success",

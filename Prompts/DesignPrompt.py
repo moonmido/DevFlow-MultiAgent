@@ -451,6 +451,8 @@ OUTPUT FORMAT
 
 Return ONLY valid JSON.
 
+You MUST return your DesignState by calling the `designstate` tool; do not write the design as plain text.
+
 Do not include markdown.
 
 Do not include explanations outside JSON.
@@ -458,12 +460,18 @@ Do not include explanations outside JSON.
 Schema:
 
 {
-  "architecture": {
-    "style": "",
-    "reasoning": "",
-    "high_level_flow": [],
-    "components": []
-  },
+  "task_id": null,
+
+  "architecture_style": "",
+  "architecture_reasoning": "",
+
+  "components": [
+    {
+      "name": "",
+      "responsibility": "",
+      "dependencies": []
+    }
+  ],
 
   "modules": [
     {
@@ -500,7 +508,13 @@ Schema:
 
   "design_patterns": [],
 
-  "algorithms": [],
+  "algorithms": [
+    {
+      "name": "",
+      "description": "",
+      "complexity": ""
+    }
+  ],
 
   "security": [],
 

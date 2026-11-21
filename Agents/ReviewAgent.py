@@ -1,7 +1,12 @@
 import os
 
+from Agents.structured_output import (
+    GroqChatModel,
+    GroqRateLimitRetry,
+    GroqToolChoiceFallback,
+    GroqToolStrategy,
+)
 from langchain.agents import create_agent
-from langchain_groq import ChatGroq
 
 import config
 from Prompts.ReviewPrompt import System_Prompt
@@ -11,10 +16,10 @@ from Tools.WebSearchTool import get_search_results
 os.environ.setdefault("GROQ_API_KEY", config.GROQ_API_KEY)
 os.environ.setdefault("TAVILY_API_KEY", config.TAVILY_API_KEY)
 
-llm = ChatGroq(
-    model="qwen/qwen3-32b",
+llm = GroqChatModel(
+    model="openai/gpt-oss-120b",
     temperature=0,
-    max_tokens=4096,
+    max_tokens=config.MODEL_MAX_TOKENS["review"],
     timeout=config.MODEL_TIMEOUT_SECONDS,
 )
 
@@ -31,6 +36,7 @@ def create_review_agent():
             ],
             model=llm,
             system_prompt=System_Prompt,
-            response_format=ReviewState,
+            middleware=[GroqRateLimitRetry(), GroqToolChoiceFallback()],
+            response_format=GroqToolStrategy(schema=ReviewState),
         )
     return _agent

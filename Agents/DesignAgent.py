@@ -1,7 +1,12 @@
 import os
 
+from Agents.structured_output import (
+    GroqChatModel,
+    GroqRateLimitRetry,
+    GroqToolChoiceFallback,
+    GroqToolStrategy,
+)
 from langchain.agents import create_agent
-from langchain_groq import ChatGroq
 
 import config
 from Prompts.DesignPrompt import Sys_Prompt
@@ -10,10 +15,10 @@ from Tools.KnowledgeBases.Design_Rag import get_relevant_documents
 
 os.environ.setdefault("GROQ_API_KEY", config.GROQ_API_KEY)
 
-llm = ChatGroq(
-    model="qwen/qwen3-32b",
+llm = GroqChatModel(
+    model="openai/gpt-oss-120b",
     temperature=0,
-    max_tokens=4096,
+    max_tokens=config.MODEL_MAX_TOKENS["design"],
     timeout=config.MODEL_TIMEOUT_SECONDS,
 )
 
@@ -30,6 +35,7 @@ def create_design_agent():
             ],
             model=llm,
             system_prompt=Sys_Prompt,
-            response_format=DesignState,
+            middleware=[GroqRateLimitRetry(), GroqToolChoiceFallback()],
+            response_format=GroqToolStrategy(schema=DesignState),
         )
     return _agent
